@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Li⁺ solvasyon kabuğu — AIMD</title>
+<title>Li⁺ Solvation Shell — Interactive AIMD Viewer</title>
+<meta name="description" content="Interactive ab initio molecular dynamics viewer of Li⁺ solvation in EC:DMC / LiPF₆ electrolytes with and without LiBOB.">
 <script>
 /*!
  * 3dmol v2.5.5
@@ -34,13 +35,13 @@ body{background:var(--paper);color:var(--ink);font-family:var(--sans);
      color:var(--ink2)}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 
-/* ---------- iskelet ---------- */
+/* ---------- layout ---------- */
 #app{position:fixed;inset:0;display:flex;flex-direction:column}
 #viewport{position:relative;flex:1;min-height:0;background:var(--paper)}
 #gl{position:absolute;inset:0}
 #gl canvas{outline:none}
 
-/* ---------- ust ---------- */
+/* ---------- header ---------- */
 header{position:absolute;top:0;left:0;right:0;z-index:6;padding:12px 14px;
        display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
        pointer-events:none}
@@ -49,7 +50,7 @@ header{position:absolute;top:0;left:0;right:0;z-index:6;padding:12px 14px;
 .title p{font-size:11.5px;color:var(--ink2);margin-top:2px}
 .title .sub{font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
 
-/* sistem sekmeleri */
+/* system tabs */
 .tabs{display:flex;background:var(--wash);border:1px solid var(--line);
       border-radius:9px;padding:2px;pointer-events:auto}
 .tabs button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:550;
@@ -57,7 +58,7 @@ header{position:absolute;top:0;left:0;right:0;z-index:6;padding:12px 14px;
 .tabs button[aria-selected="true"]{background:var(--paper);color:var(--ink);
       box-shadow:0 1px 2px rgba(20,24,29,.10),0 0 0 1px rgba(20,24,29,.05)}
 
-/* ---------- olcum paneli (imza) ---------- */
+/* ---------- readout panel ---------- */
 #readout{position:absolute;left:14px;bottom:14px;z-index:6;
   background:rgba(255,255,255,.93);backdrop-filter:blur(6px);
   border:1px solid var(--line);border-radius:11px;padding:10px 12px 8px;
@@ -71,8 +72,10 @@ header{position:absolute;top:0;left:0;right:0;z-index:6;padding:12px 14px;
        font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
 #split{margin-top:5px;font-family:var(--mono);font-size:11px;color:var(--ink2)}
 #split b{color:var(--ink);font-weight:600}
+#split .sw{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
+#split span.it{white-space:nowrap;margin-right:9px}
 
-/* ---------- lejant ---------- */
+/* ---------- legend ---------- */
 #legend{position:absolute;right:14px;bottom:14px;z-index:6;display:flex;
   flex-direction:column;gap:5px;align-items:flex-end}
 .chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:340px}
@@ -83,7 +86,7 @@ header{position:absolute;top:0;left:0;right:0;z-index:6;padding:12px 14px;
 .dot{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.13)}
 #legToggle{display:none}
 
-/* ---------- alt kumanda ---------- */
+/* ---------- bottom dock ---------- */
 #dock{flex:0 0 auto;border-top:1px solid var(--line);background:var(--paper);
   padding:9px 14px calc(9px + env(safe-area-inset-bottom));
   display:flex;flex-direction:column;gap:8px}
@@ -121,6 +124,31 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radiu
 
 #hint{font-size:11px;color:var(--ink2)}
 
+/* ---------- about panel ---------- */
+.hdr-right{display:flex;gap:6px;align-items:flex-start;pointer-events:auto}
+#infoBtn{width:32px;height:32px;border:1px solid var(--line);background:var(--wash);
+  border-radius:9px;cursor:pointer;font:600 14px/1 var(--sans);color:var(--ink2)}
+#infoBtn:hover{color:var(--ink)}
+#about{position:absolute;inset:0;z-index:30;display:none;place-items:center;
+  background:rgba(20,24,29,.28);padding:16px}
+#about[data-open="1"]{display:grid}
+#about .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;
+  max-width:520px;width:100%;max-height:100%;overflow:auto;padding:18px 20px 16px;
+  box-shadow:0 12px 40px rgba(20,24,29,.18)}
+#about h2{font-size:16px;font-weight:650;margin-bottom:8px;letter-spacing:-.01em}
+#about h3{font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink2);margin:14px 0 5px}
+#about p,#about li{font-size:13px;color:var(--ink)}
+#about ul{padding-left:18px}
+#about li{margin:3px 0}
+#about .cite{background:var(--wash);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;margin-top:14px;font-size:12px;color:var(--ink2)}
+#about .cite b{color:var(--ink);font-weight:600}
+#about kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);
+  border-radius:4px;padding:0 4px;background:var(--wash)}
+#aboutClose{float:right;border:0;background:transparent;font-size:20px;line-height:1;
+  color:var(--ink2);cursor:pointer;padding:2px 4px;margin:-4px -6px 0 8px}
+
 #boot{position:absolute;inset:0;z-index:20;display:grid;place-items:center;
   background:var(--paper);gap:8px;text-align:center}
 #boot .bar{width:150px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
@@ -135,9 +163,11 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radiu
   .title h1{font-size:13.5px}
   .title p{font-size:10.5px}
   .title .sub{display:none}
+  .title .wide{display:none}
+  #infoBtn{width:28px;height:28px;font-size:13px}
   .tabs button{padding:5px 9px;font-size:11.5px}
 
-  #legend{right:10px;bottom:auto;top:58px;gap:4px}
+  #legend{right:10px;bottom:auto;top:66px;gap:4px}
   #legToggle{display:inline-flex;font-weight:600}
   #legend[data-open="0"] .chips{display:none}
   .chips{max-width:184px}
@@ -158,47 +188,85 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radiu
 
     <header>
       <div class="title">
-        <h1>Li⁺ solvasyon kabuğu</h1>
-        <p>Ab initio moleküler dinamik · 300 K</p>
+        <h1>Li⁺ solvation shell</h1>
+        <p>Ab initio molecular dynamics · 300 K<span class="wide"> · EC:DMC / LiPF₆ ± LiBOB</span></p>
         <p class="sub" id="sysline">—</p>
       </div>
-      <div class="tabs" role="tablist">
-        <button id="tabRef" role="tab" aria-selected="true">Referans</button>
-        <button id="tabLibob" role="tab" aria-selected="false">%5 LiBOB</button>
+      <div class="hdr-right">
+        <div class="tabs" role="tablist">
+          <button id="tabRef" role="tab" aria-selected="true">Reference</button>
+          <button id="tabLibob" role="tab" aria-selected="false">+5 wt% LiBOB</button>
+        </div>
+        <button id="infoBtn" title="About this viewer" aria-label="About this viewer">i</button>
       </div>
     </header>
 
     <div id="readout">
       <div class="top">
         <span id="cnNow" class="num">—</span>
-        <span class="cap">anlık CN<span id="cnWho"></span></span>
+        <span class="cap">instantaneous CN<span id="cnWho"></span></span>
       </div>
-      <div class="lbl">koordinasyon sayısı · Li–O/F &lt; 2.60 Å</div>
+      <div class="lbl">coordination number · Li–O/F &lt; 2.60 Å</div>
       <canvas id="spark"></canvas>
       <div class="foot">
-        <span>ortalama <b id="cnMean" style="color:var(--ink)">—</b></span>
+        <span>mean <b id="cnMean" style="color:var(--ink)">—</b></span>
         <span id="cnRange">—</span>
       </div>
       <div id="split">—</div>
     </div>
 
     <div id="legend" data-open="0">
-      <button class="chip" id="legToggle" aria-expanded="false">Lejant</button>
+      <button class="chip" id="legToggle" aria-expanded="false">Legend</button>
       <div class="chips" id="chipsMol"></div>
       <div class="chips" id="chipsEl"></div>
     </div>
 
     <div id="boot">
       <div>
-        <div class="lbl" style="margin-bottom:8px">trajectory yükleniyor</div>
+        <div class="lbl" style="margin-bottom:8px">Loading trajectory…</div>
         <div class="bar"><i></i></div>
+      </div>
+    </div>
+
+    <div id="about" data-open="0" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <div class="card">
+        <button id="aboutClose" aria-label="Close">×</button>
+        <h2 id="aboutTitle">About this viewer</h2>
+        <p>Ab initio molecular dynamics trajectories (Quantum ESPRESSO, 300 K) of a
+        1:1 EC:DMC / 1 M LiPF₆ electrolyte, without additive (<b>Reference</b>) and with
+        5.03 wt% LiBOB (<b>+5 wt% LiBOB</b>).</p>
+
+        <h3>What you are seeing</h3>
+        <ul>
+          <li><b>Coordination number (CN):</b> number of O and F atoms within 2.60 Å of a Li⁺,
+          the first minimum of the Li–O radial distribution function.</li>
+          <li><b>Dashed purple lines</b> mark these Li⁺ coordination contacts in every frame.</li>
+          <li><b>Full box</b> shows the whole periodic cell. <b>Li⁺-centred</b> keeps the first
+          solvation shell of one Li⁺ in colour and fades the rest of the box.</li>
+          <li>The panel at the bottom left shows the CN over time and the first-shell
+          composition (EC, DMC, PF₆⁻, BOB⁻) for the current frame.</li>
+        </ul>
+
+        <h3>Controls</h3>
+        <ul>
+          <li>Drag to rotate, scroll or pinch to zoom.</li>
+          <li><kbd>Space</kbd> play / pause · <kbd>←</kbd> <kbd>→</kbd> step one frame.</li>
+          <li>Tap legend chips to hide or show a molecule type or element.</li>
+        </ul>
+
+        <div class="cite">
+          <b>A Multiscale DFT and Ab Initio Molecular Dynamics Study of LiBOB Tuned Li-Ion
+          Solvation in Multicomponent Carbonate Electrolytes, Validated by ATR-FTIR</b><br>
+          A. K. Baruğ, D. Ketenoğlu, B. Boyacıoğlu, H. Toffoli<br>
+          43rd ISE Topical Meeting · 27–30 September 2026 · Gdańsk, Poland
+        </div>
       </div>
     </div>
   </div>
 
   <div id="dock">
     <div class="row">
-      <button class="ico" id="play" title="Oynat / duraklat" aria-label="Oynat">
+      <button class="ico" id="play" title="Play / pause" aria-label="Play">
         <svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>
       </button>
       <input type="range" id="scrub" min="0" max="100" value="0">
@@ -206,11 +274,11 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radiu
     </div>
     <div class="row wrap">
       <div class="seg" role="group">
-        <button id="mBox" aria-pressed="true">Tüm kutu</button>
-        <button id="mLi" aria-pressed="false">Li⁺ merkezli</button>
+        <button id="mBox" aria-pressed="true">Full box</button>
+        <button id="mLi" aria-pressed="false">Li⁺-centred</button>
       </div>
       <div class="seg mini" id="liPick" role="group"></div>
-      <button class="ico" id="tglH" title="Hidrojenleri gizle" aria-label="Hidrojenleri gizle">
+      <button class="ico" id="tglH" title="Hide hydrogens" aria-label="Hide hydrogens">
         <svg viewBox="0 0 16 16"><path d="M3.2 2.2h1.9v4.6h5.8V2.2h1.9v11.6h-1.9V8.7H5.1v5.1H3.2z"/></svg>
       </button>
       <div class="seg mini" role="group">
@@ -220,7 +288,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border:0;border-radiu
         <button data-sp="22" aria-pressed="false">5×</button>
       </div>
     </div>
-    <div id="hint">Sürükle döndür · çift parmak yakınlaştır · kesikli mor çizgiler Li⁺ koordinasyon bağları</div>
+    <div id="hint">Drag to rotate · scroll or pinch to zoom · dashed purple lines are Li⁺ coordination contacts · press <b>i</b> for details</div>
   </div>
 </div>
 
@@ -238,19 +306,19 @@ function b64ToU16(s){
 </script>
 <script>
 /* =======================================================================
-   Ayarlar
+   Settings
    ----------------------------------------------------------------------
-   DT_FS : bir kaydedilmis frame arasindaki gercek sure (fs).
-           QE girdisindeki dt (a.u.) x 0.0242 x (kayit striding'i)
-           Yanlissa asagidaki iki sayiyi degistir, baska yeri elleme.
+   DT_FS : real time between two saved frames (fs).
+           dt in the QE input (a.u.) x 0.0242 x (output stride)
+           If this is wrong, change only the two numbers below.
    ======================================================================= */
 const DT_FS = { ref: 0.242 * 3, libob: 0.242 * 1 };
-const CUT    = 2.60;   // Li-O / Li-F ilk kabuk esigi (A)
+const CUT    = 2.60;   // Li-O / Li-F first-shell cutoff (Å)
 
-/* Element renkleri — GaussView/CPK duzeni, beyaz zeminde okunur tonlar */
+/* Element colours — GaussView/CPK scheme, tuned for a white background */
 const CMAP = { C:0x2E3338, H:0xD3D7DB, O:0xD8352A, F:0x5FA83C,
                P:0xEE8A16, B:0xCE7C7C, Li:0x7A3FB8 };
-/* Ball-and-stick yaricaplari (A) */
+/* Ball-and-stick radii (Å) */
 const RAD  = { H:0.15, C:0.25, O:0.24, F:0.23, P:0.31, B:0.27, Li:0.28 };
 const STICK = 0.105;
 const GHOST = 0xE9ECEF;
@@ -264,13 +332,13 @@ const MOL = {
 };
 
 const $ = id => document.getElementById(id);
-let viewer, model, meta, S = {};      // S = aktif sistem durumu
+let viewer, model, meta, S = {};      // S = active system state
 let tag = 'ref', playing = false, timer = null, speed = 120;
 let mode = 'box', focusLi = 0, hideH = false;
 const offMol = new Set(), offEl = new Set();
 const cache = {};
 
-/* ---------------------------------------------------------------- veri */
+/* ---------------------------------------------------------------- data */
 async function loadSystem(t){
   if(cache[t]) return cache[t];
   const d = meta[t];
@@ -284,7 +352,7 @@ async function loadSystem(t){
   const oIdx = [], fIdx = [];
   sy.forEach((s,i) => { if(s === 'O') oIdx.push(i); if(s === 'F') fIdx.push(i); });
 
-  /* atom -> fragment haritasi */
+  /* atom -> fragment map */
   const frag = new Int16Array(n);
   d.frags.forEach((f,fi) => f.idx.forEach(i => frag[i] = fi));
 
@@ -294,8 +362,8 @@ async function loadSystem(t){
   return sys;
 }
 
-/* Tum frameler icin CN + baglanma listesi. MIC ile — kabuk kutu sinirini
-   kesse bile dogru sayilir. */
+/* CN + contact list for every frame, using the minimum image convention,
+   so a shell that crosses the box boundary is still counted correctly. */
 function precomputeCN(s){
   const { pos, natoms:n, nframes:nf, li, oIdx, fIdx, L } = s;
   const perFrame = [], links = [], perLi = [];
@@ -327,10 +395,10 @@ function precomputeCN(s){
            min:Math.min(...perFrame), max:Math.max(...perFrame) };
 }
 
-/* -------------------------------------------------- kare koordinatlari */
-/* Li merkezli modda: secili Li kutu merkezine tasinir, her fragment o
-   Li'ye en yakin periyodik goruntusune kaydirilir. Boylece solvasyon
-   kabugu hicbir zaman kutu duvarindan bolunmez. */
+/* ------------------------------------------------- frame coordinates */
+/* Li-centred mode: the selected Li is moved to the box centre and every
+   fragment is shifted to its periodic image closest to that Li, so the
+   solvation shell is never split by the box wall. */
 function frameCoords(s, f){
   const n = s.natoms, base = f*n*3, L = s.L;
   const out = new Float32Array(n*3);
@@ -352,12 +420,12 @@ function frameCoords(s, f){
     }
   };
 
-  /* 1) once butun Li'leri odak Li'nin kutusuna al */
+  /* 1) first bring every Li into the focus Li's image */
   for(const fr of s.frags) if(fr.kind === 'Li') shift(fr.idx, cx, cy, cz);
 
-  /* 2) koordine eden her molekulu, bagli oldugu Li'nin yanina tasi.
-        Boylece dort Li'nin kabugu ayni anda butun kalir; kutu duvarini
-        kesen hicbir koordinasyon bagi olmaz. */
+  /* 2) move each coordinating molecule next to the Li it binds to, so all
+        Li shells stay whole at once and no coordination contact crosses
+        the box wall. */
   const host = new Map();
   for(const [li, b] of s.cn.links[f]) if(!host.has(s.frag[b])) host.set(s.frag[b], li);
 
@@ -370,7 +438,7 @@ function frameCoords(s, f){
   return out;
 }
 
-/* ------------------------------------------------------------- ciizim */
+/* ----------------------------------------------------------- drawing */
 function buildModel(s){
   viewer.removeAllModels();
   viewer.removeAllShapes();
@@ -379,7 +447,7 @@ function buildModel(s){
     elem: el, x: c[i*3], y: c[i*3+1], z: c[i*3+2],
     bonds: s.bonds[i], bondOrder: s.bonds[i].map(() => 1),
     serial: i, index: i,
-    resi: s.frag[i] + 1,                 // fragment no -> secim icin
+    resi: s.frag[i] + 1,                 // fragment number, used for selection
     resn: s.frags[s.frag[i]].kind,       // EC / DMC / PF6 / BOB / Li
     properties: {}
   }));
@@ -388,9 +456,9 @@ function buildModel(s){
 }
 
 function shellFragments(s, f){
-  /* Tam renkli gosterilecek kume = odak Li + ona CUT icinde baglanan
-     fragmentler. Kesikli bagla birebir ayni kriter, boylece "renkli olan
-     kabuktadir" kurali gorselde bozulmaz. */
+  /* Full-colour set = focus Li + fragments bound to it within CUT. This is
+     exactly the dashed-contact criterion, so "coloured means in the shell"
+     always holds in the picture. */
   const a = s.li[focusLi] ?? s.li[0];
   const set = new Set([s.frag[a] + 1]);
   for(const [li, b] of s.cn.links[f]) if(li === a) set.add(s.frag[b] + 1);
@@ -405,7 +473,7 @@ function styleFrame(s, f){
     (shell && !shell.has(i+1) ? ghostList : liveList).push(i+1);
   });
 
-  model.setStyle({}, {});                                  // once hepsini sil
+  model.setStyle({}, {});                                  // clear all styles first
   if(ghostList.length)
     model.setStyle({resi:ghostList, not:{elem:'H'}},
                    {stick:{radius:0.026, color:GHOST}});
@@ -416,7 +484,7 @@ function styleFrame(s, f){
       { sphere:{radius:RAD[el], color:CMAP[el]},
         stick :{radius:STICK,   color:CMAP[el]} }, true);
   }
-  /* gizlenen molekul tiplerini tamamen kaldir */
+  /* remove hidden molecule types completely */
   const hidden = s.frags.map((fr,i)=>offMol.has(fr.kind)?i+1:0).filter(Boolean);
   if(hidden.length) model.setStyle({resi:hidden}, {});
 }
@@ -424,14 +492,14 @@ function styleFrame(s, f){
 function drawShapes(s, f){
   viewer.removeAllShapes();
   const c = S.coords;
-  /* koordinasyon baglari — imza ogesi: kabuk canli olarak nefes alir */
+  /* coordination contacts: the shell visibly "breathes" as frames play */
   const only = mode === 'li' ? (s.li[focusLi] ?? s.li[0]) : null;
   for(const [a,b] of s.cn.links[f]){
     if(only !== null && a !== only) continue;
     if(offEl.has(s.symbols[b])) continue;
     const A = {x:c[a*3], y:c[a*3+1], z:c[a*3+2]};
     let B = {x:c[b*3], y:c[b*3+1], z:c[b*3+2]};
-    /* kutu modunda bag sinirdan gecebilir; en yakin goruntuye cek */
+    /* in box mode a contact can cross the wall; use the nearest image */
     const L = s.L;
     B = { x: B.x - L*Math.round((B.x-A.x)/L),
           y: B.y - L*Math.round((B.y-A.y)/L),
@@ -470,18 +538,18 @@ function setFrame(f, keepView){
   if(!keepView) $('scrub').value = f;
 }
 
-/* ---------------------------------------------------------- olcumler */
+/* ------------------------------------------------------------ readout */
 function updateReadout(s, f){
   const solo = mode === 'li' && s.li.length > 1;
   const cn = solo ? s.cn.perLi[f][focusLi] : s.cn.perFrame[f];
   $('cnNow').textContent = solo ? cn.toFixed(0) : cn.toFixed(2);
   $('cnMean').textContent = (solo ? s.cn.meanLi[focusLi] : s.cn.mean).toFixed(2);
-  $('cnRange').textContent = solo ? 'bu Li⁺ boyunca'
-                    : `${s.cn.min.toFixed(1)}–${s.cn.max.toFixed(1)} arası`;
+  $('cnRange').textContent = solo ? 'this Li⁺, whole run'
+                    : `range ${s.cn.min.toFixed(1)}–${s.cn.max.toFixed(1)}`;
   $('cnWho').textContent = solo ? ` · Li ${focusLi+1}`
-                         : (s.li.length > 1 ? ` · ${s.li.length} Li⁺ ort.` : '');
+                         : (s.li.length > 1 ? ` · mean of ${s.li.length} Li⁺` : '');
 
-  /* ilk kabuk kompozisyonu */
+  /* first-shell composition */
   const cnt = {EC:0, DMC:0, PF6:0, BOB:0};
   const onlyLi = solo ? s.li[focusLi] : null;
   for(const [a,b] of s.cn.links[f]){
@@ -490,7 +558,8 @@ function updateReadout(s, f){
     if(k in cnt) cnt[k]++;
   }
   $('split').innerHTML = Object.entries(cnt)
-      .map(([k,v]) => `${MOL[k].name} <b>${v}</b>`).join('&nbsp;&nbsp;');
+      .filter(([k,v]) => v > 0 || k === 'EC' || k === 'DMC' || (k in (s.tally||{}) && s.tally[k]))
+      .map(([k,v]) => `<span class="it"><span class="sw" style="background:${MOL[k].color}"></span>${MOL[k].name} <b>${v}</b></span>`).join('');
 
   const t = f * DT_FS[tag];
   $('clock').innerHTML = `<b class="num">${f}</b> / <span class="num">${s.nframes-1}</span>`
@@ -510,7 +579,7 @@ function drawSpark(s, f, soloLi){
   const lo = Math.floor(Math.min(...arr)), hi = Math.ceil(Math.max(...arr));
   const Y = v => h - 3 - (v - lo)/Math.max(hi-lo, 1e-6)*(h-8);
 
-  /* ortalama cizgisi */
+  /* mean line */
   g.strokeStyle = '#E2E6EA'; g.lineWidth = 1;
   const mu = (soloLi >= 0) ? s.cn.meanLi[soloLi] : s.cn.mean;
   g.beginPath(); g.moveTo(0, Y(mu)); g.lineTo(w, Y(mu)); g.stroke();
@@ -523,7 +592,7 @@ function drawSpark(s, f, soloLi){
   }
   g.stroke();
 
-  /* oynatilan kisim vurgulu */
+  /* highlight the part already played */
   g.strokeStyle = '#7A3FB8'; g.lineWidth = 1.6;
   g.beginPath();
   for(let i = 0; i <= f; i++){
@@ -536,8 +605,8 @@ function drawSpark(s, f, soloLi){
   g.beginPath(); g.arc(px, py, 2.6, 0, 7); g.fill();
 }
 
-/* ------------------------------------------------------------ kumanda */
-/* Dar ekranda kutu kirpilmasin: gorus alanini viewport'a gore ayarla */
+/* ----------------------------------------------------------- controls */
+/* Fit the view to the viewport so the box is not clipped on narrow screens */
 function fitView(){
   const narrow = innerWidth < 640;
   viewer.zoomTo();
@@ -548,7 +617,7 @@ function fitView(){
 
 function play(on){
   playing = on;
-  $('play').setAttribute('aria-label', on ? 'Duraklat' : 'Oynat');
+  $('play').setAttribute('aria-label', on ? 'Pause' : 'Play');
   $('play').innerHTML = on
     ? '<svg viewBox="0 0 16 16"><path d="M3.5 2.5h3.2v11H3.5zM9.3 2.5h3.2v11H9.3z"/></svg>'
     : '<svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg>';
@@ -569,9 +638,9 @@ async function switchSystem(t){
   focusLi = 0;
   const c = s.tally;
   $('sysline').textContent =
-    `${s.natoms} atom · ${c.EC||0} EC · ${c.DMC||0} DMC · `
+    `${s.natoms} atoms · ${c.EC||0} EC · ${c.DMC||0} DMC · `
     + `${c.PF6||0} PF₆⁻${c.BOB ? ' · ' + c.BOB + ' BOB⁻' : ''} · ${c.Li||0} Li⁺ · `
-    + `${s.cell.toFixed(2)} Å küp`;
+    + `${s.cell.toFixed(2)} Å cubic box`;
   $('scrub').max = s.nframes - 1;
   buildLiPicker(s);
   buildModel(s);
@@ -625,7 +694,7 @@ function buildLegend(){
   }
 }
 
-/* --------------------------------------------------------------- baslat */
+/* -------------------------------------------------------------- start */
 (async function(){
   viewer = $3Dmol.createViewer($('gl'), {
     backgroundColor:'white', antialias:true, id:'v'
@@ -670,7 +739,24 @@ function buildLegend(){
     if(playing) play(true);
   });
 
+  /* about panel */
+  const about = $('about');
+  const openAbout = on => { about.dataset.open = on ? '1' : '0'; };
+  $('infoBtn').onclick = () => openAbout(true);
+  $('aboutClose').onclick = () => openAbout(false);
+  about.onclick = e => { if(e.target === about) openAbout(false); };
+
+  /* pause while the tab is hidden, resume when it comes back */
+  let resume = false;
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ resume = playing; play(false); }
+    else if(resume){ play(true); resume = false; }
+  });
+
   addEventListener('keydown', e => {
+    if(e.key === 'Escape'){ openAbout(false); return; }
+    if(e.key === 'i' || e.key === 'I'){ openAbout(about.dataset.open !== '1'); return; }
+    if(about.dataset.open === '1') return;
     if(e.key === ' '){ e.preventDefault(); play(!playing); }
     if(e.key === 'ArrowRight'){ play(false); setFrame(S.f + 1); }
     if(e.key === 'ArrowLeft'){  play(false); setFrame(S.f - 1); }
